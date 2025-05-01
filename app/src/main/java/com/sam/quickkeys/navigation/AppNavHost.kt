@@ -10,10 +10,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.sam.pay.ui.screens.about.AboutScreen
 import com.sam.pay.ui.screens.about.HomeScreen
-import com.sam.quickkeys.data.UserDatabase
+import com.sam.quickkeys.data.AppDatabase
 import com.sam.quickkeys.repository.UserRepository
 import com.sam.quickkeys.ui.screens.RegisterScreen
 import com.sam.quickkeys.ui.screens.auth.LoginScreen
+import com.sam.quickkeys.ui.screens.booking.BookingHistoryScreen
+import com.sam.quickkeys.ui.screens.booking.BookingScreen
 import com.sam.quickkeys.viewmodel.AuthViewModel
 import com.sam.quickkeys.viewmodel.AuthViewModelFactory
 
@@ -23,30 +25,32 @@ fun AppNavHost(
     navController: NavHostController = rememberNavController(),
     startDestination: String = ROUT_REGISTER
 ) {
-    // ✅ Get context for Room database
     val context = LocalContext.current
 
-    // ✅ Create database, repository, and ViewModelFactory
-    val appDatabase = UserDatabase.getDatabase(context)
-    val authRepository = UserRepository(appDatabase.userDao())
-    val authViewModelFactory = AuthViewModelFactory(authRepository)
+    // Initialize AuthViewModel using factory
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(
+            UserRepository(AppDatabase.getDatabase(context).userDao())
+        )
+    )
 
-    // ✅ NavHost setup
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier
     ) {
+        // Home screen (car listings)
         composable(ROUT_HOME) {
             HomeScreen(navController)
         }
+
+        // About screen
         composable(ROUT_ABOUT) {
             AboutScreen(navController)
         }
 
-        // ✅ Register Screen
+        // Register screen
         composable(ROUT_REGISTER) {
-            val authViewModel: AuthViewModel = viewModel(factory = authViewModelFactory)
             RegisterScreen(authViewModel, navController) {
                 navController.navigate(ROUT_LOGIN) {
                     popUpTo(ROUT_REGISTER) { inclusive = true }
@@ -54,18 +58,22 @@ fun AppNavHost(
             }
         }
 
-        // ✅ Login Screen
+        // Login screen
         composable(ROUT_LOGIN) {
-            val authViewModel: AuthViewModel = viewModel(factory = authViewModelFactory)
-            LoginScreen(
-                onLogin = { username, password -> authViewModel.loginUser(username, password) },
-                navController = navController,
-                onSuccess = {
-                    navController.navigate(ROUT_HOME) {
-                        popUpTo(ROUT_LOGIN) { inclusive = true }
-                    }
+            LoginScreen(authViewModel, navController) {
+                navController.navigate(ROUT_HOME) {
+                    popUpTo(ROUT_LOGIN) { inclusive = true }
                 }
-            )
+            }
         }
+        composable(ROUT_BOOKING) {
+            val car = // pass via nav args or shared ViewModel
+                BookingScreen(car = car, userId = 1, navController = navController)
+        }
+
+        composable(ROUT_HISTORY) {
+            BookingHistoryScreen(userId = 1)
+        }
+
     }
 }

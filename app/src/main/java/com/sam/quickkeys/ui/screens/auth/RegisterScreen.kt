@@ -4,6 +4,9 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
@@ -11,6 +14,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +27,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,25 +50,18 @@ fun RegisterScreen(
     navController: NavController,
     onRegisterSuccess: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var businessName by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var profilePictureUri by remember { mutableStateOf("") }
     val context = LocalContext.current
-
-    // Image Picker
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let {
-            profilePictureUri = it.toString()
-        }
-    }
+    val animatedAlpha by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = tween(durationMillis = 1500, easing = LinearEasing),
+        label = "Animated Alpha"
+    )
 
     Column(
         modifier = Modifier
@@ -69,182 +70,160 @@ fun RegisterScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+
+        Spacer(modifier = Modifier.height(8.dp))
         AnimatedVisibility(visible = true, enter = fadeIn(), exit = fadeOut()) {
             Text(
-                text = "Create Your Account",
-                fontSize = 28.sp,
-                color = MaterialTheme.colorScheme.primary
+                "Create Your Account",
+                fontSize = 40.sp,
+                fontFamily = FontFamily.Cursive
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Profile Picture Picker
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .clip(CircleShape)
-                .background(Color.LightGray),
-            contentAlignment = Alignment.Center
-        ) {
-            if (profilePictureUri.isNotEmpty()) {
-                AsyncImage(model = profilePictureUri, contentDescription = "Profile Picture")
-            } else {
-                IconButton(onClick = {
-                    imagePickerLauncher.launch("image/*")
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.camera_alt),
-                        contentDescription = "Pick Profile Picture"
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Name
+        //Username
         OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
-            leadingIcon = { Icon(painterResource(R.drawable.profile), contentDescription = null) },
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") },
+            leadingIcon = { Icon(Icons.Filled.Person, contentDescription = "Username Icon") },
             modifier = Modifier.fillMaxWidth()
         )
+        //End of username
+
+
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Email
+        //Email
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            leadingIcon = { Icon(painterResource(R.drawable.email), contentDescription = null) },
+            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = "Email Icon") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth()
         )
+        //End of email
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Phone Number
-        OutlinedTextField(
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text("Phone Number") },
-            leadingIcon = { Icon(painterResource(R.drawable.phone), contentDescription = null) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            modifier = Modifier.fillMaxWidth()
-        )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        //Role
+        var role by remember { mutableStateOf("user") }
+        val roleOptions = listOf("user", "admin")
+        var expanded by remember { mutableStateOf(false) }
 
-        // Business Name
-        OutlinedTextField(
-            value = businessName,
-            onValueChange = { businessName = it },
-            label = { Text("Business Name") },
-            leadingIcon = { Icon(painterResource(R.drawable.business), contentDescription = null) },
-            modifier = Modifier.fillMaxWidth()
-        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = role,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Select Role") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier.menuAnchor().fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                roleOptions.forEach { selectionOption ->
+                    DropdownMenuItem(
+                        text = { Text(selectionOption) },
+                        onClick = {
+                            role = selectionOption
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+        //End of role
 
-        Spacer(modifier = Modifier.height(8.dp))
 
-        // Password
+
+
+
+
+        // Password Input Field with Show/Hide Toggle
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password (4-digit)") },
+            label = { Text("Password") },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            leadingIcon = { Icon(painterResource(R.drawable.lock), contentDescription = null) },
+            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Password Icon") },
             trailingIcon = {
-                val icon = if (passwordVisible) R.drawable.visibility else R.drawable.visibilityoff
+                val image = if (passwordVisible) painterResource(R.drawable.visibility)  else painterResource(R.drawable.visibilityoff)
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(painterResource(icon), contentDescription = "Toggle password visibility")
+                    Icon(image, contentDescription = if (passwordVisible) "Hide Password" else "Show Password")
                 }
             },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Confirm Password
+        // Confirm Password Input Field with Show/Hide Toggle
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
             label = { Text("Confirm Password") },
             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            leadingIcon = { Icon(painterResource(R.drawable.lock), contentDescription = null) },
+            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Confirm Password Icon") },
             trailingIcon = {
-                val icon = if (confirmPasswordVisible) R.drawable.visibility else R.drawable.visibilityoff
+                val image = if (confirmPasswordVisible) painterResource(R.drawable.visibility)  else painterResource(R.drawable.visibilityoff)
                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                    Icon(painterResource(icon), contentDescription = "Toggle confirm password visibility")
+                    Icon(image, contentDescription = if (confirmPasswordVisible) "Hide Password" else "Show Password")
                 }
             },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(5.dp))
 
-        // Register Button
-        Button(
-            onClick = {
-                if (name.isBlank() || email.isBlank() || phoneNumber.isBlank() ||
-                    password.isBlank() || confirmPassword.isBlank() ||
-                    businessName.isBlank() || profilePictureUri.isBlank()
-                ) {
-                    Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT).show()
-                } else if (password != confirmPassword) {
-                    Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
-                } else if (password.length != 4) {
-                    Toast.makeText(context, "Password must be 4 digits", Toast.LENGTH_SHORT).show()
-                } else {
-                    val user = User(
-                        id = 0, // Let Room auto-generate this
-                        name = name,
-                        email = email,
-                        phoneNumber = phoneNumber,
-                        password = password,
-                        businessName = businessName,
-                        profilePictureUri = profilePictureUri
-                    )
-                    authViewModel.registerUser(user)
-                    Toast.makeText(context, "Registered successfully!", Toast.LENGTH_SHORT).show()
-                    onRegisterSuccess()
-                }
-            },
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                .height(50.dp)
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(Color(0xFF00C6FF), Color(0xFF0072FF))
+                    ),
+                    shape = MaterialTheme.shapes.medium
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Text("Register", fontSize = 18.sp, color = Color.White)
+            Button(
+                onClick = {
+                    if (username.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
+                        Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT).show()
+                    } else if (password != confirmPassword) {
+                        Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
+                    } else {
+                        authViewModel.registerUser(User(username = username, email = email, role = role, password = password))
+                        onRegisterSuccess()
+                    }
+                },
+                modifier = Modifier.fillMaxSize(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+            ) {
+                Text("Register", color = Color.White)
+            }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(5.dp))
 
-        TextButton(onClick = {
-            navController.navigate(ROUT_LOGIN) {
-                popUpTo(ROUT_REGISTER) { inclusive = true }
-            }
-        }) {
+        TextButton(
+            onClick = { navController.navigate(ROUT_LOGIN) }
+        ) {
             Text("Already have an account? Login")
         }
     }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-fun RegisterScreenPreview() {
-    val navController = rememberNavController()
-    val dummyDao = object : UserDao {
-        override suspend fun registerUser(user: User) {}
-        override suspend fun loginUser(name: String, password: String): User? = null
-        override suspend fun updateUser(user: User) {}
-        override suspend fun deleteUser(user: User) {}
-        override suspend fun getUserById(id: Int): User? = null
-    }
-    val dummyRepo = UserRepository(dummyDao)
-    RegisterScreen(authViewModel = AuthViewModel(dummyRepo), navController = navController) {}
 }
