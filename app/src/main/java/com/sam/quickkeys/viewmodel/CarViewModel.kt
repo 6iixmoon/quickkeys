@@ -1,39 +1,29 @@
 package com.sam.quickkeys.viewmodel
 
-import android.app.Application
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.viewModelScope
-import com.sam.quickkeys.data.AppDatabase
+import androidx.lifecycle.*
 import com.sam.quickkeys.model.Car
 import com.sam.quickkeys.repository.CarRepository
 import kotlinx.coroutines.launch
 
-class CarViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: CarRepository
-    val allCars: LiveData<List<Car>>
+class CarViewModel(
+    private val carRepository: CarRepository
+) : ViewModel() {
 
-    init {
-        val db = AppDatabase.getDatabase(application)
-        repository = CarRepository(db.carDao())
-        allCars = repository.allCars
-    }
+    val allCars: LiveData<List<Car>> = carRepository.allCars
 
     fun addCar(car: Car) = viewModelScope.launch {
-        repository.insertCar(car)
+        carRepository.insertCar(car)
     }
 
     fun deleteCar(car: Car) = viewModelScope.launch {
-        repository.deleteCar(car)
+        carRepository.deleteCar(car)
     }
 
     fun updateCar(car: Car) = viewModelScope.launch {
-        repository.updateCar(car)
+        carRepository.updateCar(car)
     }
 
-
+    fun getCarById(id: Int): LiveData<Car> {
+        return carRepository.getCarById(id).asLiveData()
+    }
 }
-
-

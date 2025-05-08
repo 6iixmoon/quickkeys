@@ -74,4 +74,5 @@ dependencies {
 
     //livedata
     implementation("androidx.compose.runtime:runtime-livedata:1.6.4")
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.4")
 }

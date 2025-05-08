@@ -1,11 +1,11 @@
 package com.sam.quickkeys.viewmodel
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sam.quickkeys.model.User
 import com.sam.quickkeys.repository.UserRepository
 import kotlinx.coroutines.launch
+
 class AuthViewModel(private val repository: UserRepository) : ViewModel() {
     var loggedInUser: ((User?) -> Unit)? = null
 

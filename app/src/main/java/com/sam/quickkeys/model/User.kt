@@ -1,5 +1,6 @@
 package com.sam.quickkeys.model
 
+
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 

@@ -1,14 +1,17 @@
 package com.sam.quickkeys.ui.screens.auth
 
-
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,19 +20,16 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
+import com.sam.quickkeys.navigation.ROUT_DASHBOARD
 import com.sam.quickkeys.navigation.ROUT_HOME
-import com.sam.quickkeys.navigation.ROUT_LOGIN
+import com.sam.quickkeys.navigation.ROUT_REGISTER
 import com.sam.quickkeys.viewmodel.AuthViewModel
 import com.sam.quickkeys.R
-import com.sam.quickkeys.navigation.ROUT_REGISTER
 
 @Composable
 fun LoginScreen(
@@ -49,7 +49,7 @@ fun LoginScreen(
                 Toast.makeText(context, "Invalid Credentials", Toast.LENGTH_SHORT).show()
             } else {
                 if (user.role == "admin") {
-                    navController.navigate(ROUT_HOME) {
+                    navController.navigate(ROUT_DASHBOARD) {
                     }
                 } else {
                     navController.navigate(ROUT_HOME) {
@@ -67,7 +67,18 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
+        // Animated Welcome Text
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn(animationSpec = tween(1000)),
+            exit = fadeOut(animationSpec = tween(1000))
+        ) {
+            Text(
+                text = "Welcome Back!",
+                fontSize = 40.sp,
+                fontFamily = FontFamily.Cursive
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
