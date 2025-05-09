@@ -16,6 +16,7 @@ import com.sam.quickkeys.repository.UserRepository
 import com.sam.quickkeys.repository.CarRepository
 import com.sam.quickkeys.ui.screens.RegisterScreen
 import com.sam.quickkeys.ui.screens.about.HomeScreen
+import com.sam.quickkeys.ui.screens.admin.AdminScreen
 import com.sam.quickkeys.ui.screens.auth.LoginScreen
 import com.sam.quickkeys.ui.screens.booking.BookingHistoryScreen
 import com.sam.quickkeys.ui.screens.booking.BookingScreen
@@ -77,13 +78,10 @@ fun AppNavHost(
                 }
             }
         }
-
-        // Booking screen with car data passed as argument
-
-
-        // Booking History screen
-        composable(ROUT_HISTORY) {
-            BookingHistoryScreen(userId = 1)
+        composable(ROUT_ADMIN) {
+            AdminScreen(carViewModel = carViewModel)
         }
+
+
     }
 }

@@ -30,6 +30,7 @@ import com.sam.quickkeys.navigation.ROUT_HOME
 import com.sam.quickkeys.navigation.ROUT_REGISTER
 import com.sam.quickkeys.viewmodel.AuthViewModel
 import com.sam.quickkeys.R
+import com.sam.quickkeys.navigation.ROUT_ADMIN
 
 @Composable
 fun LoginScreen(
@@ -49,7 +50,7 @@ fun LoginScreen(
                 Toast.makeText(context, "Invalid Credentials", Toast.LENGTH_SHORT).show()
             } else {
                 if (user.role == "admin") {
-                    navController.navigate(ROUT_DASHBOARD) {
+                    navController.navigate(ROUT_ADMIN) {
                     }
                 } else {
                     navController.navigate(ROUT_HOME) {

@@ -1,5 +1,8 @@
 package com.sam.quickkeys.ui.screens.admin
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -7,9 +10,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.sam.quickkeys.model.Car
 import com.sam.quickkeys.viewmodel.CarViewModel
 
@@ -24,6 +29,14 @@ fun AdminScreen(carViewModel: CarViewModel = viewModel()) {
     var imageUrl by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedCar by remember { mutableStateOf<Car?>(null) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            imageUrl = it.toString()
+        }
+    }
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -44,6 +57,7 @@ fun AdminScreen(carViewModel: CarViewModel = viewModel()) {
             onPriceChange = { price = it },
             imageUrl = imageUrl,
             onImageUrlChange = { imageUrl = it },
+            onPickImage = { imagePickerLauncher.launch("image/*") },
             description = description,
             onDescriptionChange = { description = it },
             onSubmit = {
@@ -110,11 +124,13 @@ fun AdminCarForm(
     onPriceChange: (String) -> Unit,
     imageUrl: String,
     onImageUrlChange: (String) -> Unit,
+    onPickImage: () -> Unit,
     description: String,
     onDescriptionChange: (String) -> Unit,
     onSubmit: () -> Unit,
     submitLabel: String
 ) {
+    Spacer(modifier = Modifier.height(16.dp))
     Column {
         OutlinedTextField(
             value = name,
@@ -153,12 +169,23 @@ fun AdminCarForm(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = imageUrl,
-            onValueChange = onImageUrlChange,
-            label = { Text("Image URL") },
+        Button(
+            onClick = onPickImage,
             modifier = Modifier.fillMaxWidth()
-        )
+        ) {
+            Text("Select Car Image from Gallery")
+        }
+
+        if (imageUrl.isNotBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "Selected Car Image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
