@@ -1,12 +1,14 @@
 package com.sam.quickkeys.navigation
 
 const val ROUT_HOME = "home"
-const val ROUT_ABOUT = "about"
 const val ROUT_REGISTER = "register"
 const val ROUT_LOGIN = "login"
 const val ROUT_ADMIN = "admin"
-const val ROUT_BOOK = "book"
-const val ROUT_DASHBOARD = "dashboard"
-const val ROUT_BOOKING = "booking"
-const val ROUT_HISTORY = "history"
-const val ROUT_ADMINSCREEN = "AdminScreen"
+const val ROUT_PROFILE = "profile/{userId}"
+const val ROUT_CAR = "car/{carId}"
+const val ROUT_BOOKING = "booking/{carId}/{userId}"
+const val ROUT_ABOUT = "about"
+const val ROUT_SCAFFOLD = "scaffold"
+
+// Helper function for dynamic route generation
+fun getCarRoute(carId: Int): String = "car/$carId"

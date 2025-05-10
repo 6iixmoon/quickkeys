@@ -5,13 +5,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,41 +25,44 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.sam.quickkeys.navigation.ROUT_DASHBOARD
+import com.sam.quickkeys.navigation.ROUT_ADMIN
 import com.sam.quickkeys.navigation.ROUT_HOME
 import com.sam.quickkeys.navigation.ROUT_REGISTER
 import com.sam.quickkeys.viewmodel.AuthViewModel
+import androidx.compose.runtime.livedata.observeAsState
 import com.sam.quickkeys.R
-import com.sam.quickkeys.navigation.ROUT_ADMIN
 
 @Composable
 fun LoginScreen(
     authViewModel: AuthViewModel,
     navController: NavController,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
-    // Observe login logic
-    LaunchedEffect(authViewModel) {
-        authViewModel.loggedInUser = { user ->
-            if (user == null) {
-                Toast.makeText(context, "Invalid Credentials", Toast.LENGTH_SHORT).show()
+    val user by authViewModel.currentUser.collectAsState()
+
+
+    // Observe and react to login result
+    LaunchedEffect(user) {
+        user?.let {
+            Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+            if (it.role == "admin") {
+                navController.navigate(ROUT_ADMIN) {
+                    popUpTo(0)
+                }
             } else {
-                if (user.role == "admin") {
-                    navController.navigate(ROUT_ADMIN) {
-                    }
-                } else {
-                    navController.navigate(ROUT_HOME) {
-                    }
+                navController.navigate(ROUT_HOME) {
+                    popUpTo(0)
                 }
             }
+            onLoginSuccess()
         }
     }
-//End of login logic
 
     Column(
         modifier = Modifier
@@ -68,7 +71,6 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Animated Welcome Text
         AnimatedVisibility(
             visible = true,
             enter = fadeIn(animationSpec = tween(1000)),
@@ -83,12 +85,11 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Email Input
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = "Email Icon") },
+            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
@@ -96,27 +97,25 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Password Input with Show/Hide Toggle
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
-            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Password Icon") },
+            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             trailingIcon = {
-                val image = if (passwordVisible) painterResource(R.drawable.visibility) else painterResource(R.drawable.visibilityoff)
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(image, contentDescription = if (passwordVisible) "Hide Password" else "Show Password")
+                    val icon = if (passwordVisible) R.drawable.visibility else R.drawable.visibilityoff
+                    Icon(painter = painterResource(icon), contentDescription = null)
                 }
             }
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Gradient Login Button
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -147,10 +146,8 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Register Navigation Button
         TextButton(onClick = { navController.navigate(ROUT_REGISTER) }) {
             Text("Don't have an account? Register")
         }
     }
 }
-

@@ -5,11 +5,11 @@ import com.sam.quickkeys.model.Car
 import com.sam.quickkeys.repository.CarRepository
 import kotlinx.coroutines.launch
 
-class CarViewModel(
+open class CarViewModel(
     private val carRepository: CarRepository
 ) : ViewModel() {
 
-    val allCars: LiveData<List<Car>> = carRepository.allCars
+    open val allCars: LiveData<List<Car>> = carRepository.allCars
 
     fun addCar(car: Car) = viewModelScope.launch {
         carRepository.insertCar(car)

@@ -9,8 +9,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.sam.quickkeys.data.AppDatabase
 import com.sam.quickkeys.repository.CarRepository
@@ -19,63 +22,95 @@ import com.sam.quickkeys.viewmodel.CarViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CarDetailsScreen(carId: Int) {
+fun CarDetailsScreen(carId: Int, navController: NavHostController) {
     val context = LocalContext.current
 
-    // ViewModel with Factory
     val carViewModel: CarViewModel = viewModel(
         factory = CarViewModelFactory(
             CarRepository(AppDatabase.getDatabase(context).carDao())
         )
     )
 
-    // Observe car LiveData
     val car by carViewModel.getCarById(carId).observeAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(title = {
-                Text(text = car?.name?.let { "$it Details" } ?: "Car Details")
-            })
+            TopAppBar(
+                title = {
+                    Text(
+                        text = car?.name?.let { "$it Details" } ?: "Car Details",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White
+                )
+            )
         }
     ) { padding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)) {
-
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
             car?.let {
-                Column(modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)) {
-
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     Image(
                         painter = rememberAsyncImagePainter(it.imageUrl),
-                        contentDescription = null,
+                        contentDescription = "Car Image",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(250.dp)
+                            .height(220.dp)
+                            .padding(bottom = 8.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(text = "${it.name} ${it.model}", style = MaterialTheme.typography.titleLarge)
-                    Text(text = "Price/Day: $${it.pricePerDay}")
-                    Text(text = "Description: ${it.description}")
                     Text(
-                        text = if (it.isAvailable) "Available" else "Unavailable",
-                        color = if (it.isAvailable) Color.Green else Color.Red
+                        text = "${it.name} ${it.model}",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Type: ${it.type}",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Text(
+                        text = "Price per Day: $${it.pricePerDay}",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Text(
+                        text = it.description,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Text(
+                        text = if (it.isAvailable) "Available" else "Currently Unavailable",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (it.isAvailable) Color(0xFF388E3C) else Color.Red
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     Button(
                         onClick = {
-                            // TODO: Add booking logic here
+                            navController.navigate("admin_with_car/${it.id}")
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = it.isAvailable
+                        enabled = it.isAvailable,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Text("Book Now")
+                        Text("Book Now", fontSize = 16.sp)
                     }
                 }
             } ?: CircularProgressIndicator(

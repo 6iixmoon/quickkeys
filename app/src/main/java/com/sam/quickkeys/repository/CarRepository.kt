@@ -5,7 +5,7 @@ import com.sam.quickkeys.data.CarDao
 import com.sam.quickkeys.model.Car
 import kotlinx.coroutines.flow.Flow
 
-class CarRepository(private val carDao: CarDao) {
+open class CarRepository(private val carDao: CarDao) {
 
     // Get all cars
     val allCars: LiveData<List<Car>> = carDao.getAllCars()
@@ -24,7 +24,6 @@ class CarRepository(private val carDao: CarDao) {
     fun getCarById(id: Int): Flow<Car> {
         return carDao.getCarById(id)
     }
-
 
     // Get cars sorted by price
     fun getCarsSortedByPrice(): LiveData<List<Car>> {

@@ -1,23 +1,22 @@
 package com.sam.quickkeys.viewmodel
 
 import android.app.Application
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sam.quickkeys.data.AppDatabase
 import com.sam.quickkeys.model.Booking
 import com.sam.quickkeys.repository.BookingRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-
-class BookingViewModel(application: Application) : AndroidViewModel(application) {
+open class BookingViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: BookingRepository
     private var _bookings = mutableStateOf<List<Booking>>(emptyList())
     val bookings: State<List<Booking>> get() = _bookings
-
 
     init {
         val db = AppDatabase.getDatabase(application)
@@ -28,8 +27,11 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
         _bookings.value = repository.getBookingsByUser(userId)
     }
 
-    fun bookCar(booking: Booking) = viewModelScope.launch {
-        repository.insertBooking(booking)
-        fetchBookings(booking.userId)
+    // Change return type to Job if you're launching a coroutine
+    open fun bookCar(booking: Booking): Job {
+        return viewModelScope.launch {
+            repository.insertBooking(booking)
+            fetchBookings(booking.userId)
+        }
     }
 }
