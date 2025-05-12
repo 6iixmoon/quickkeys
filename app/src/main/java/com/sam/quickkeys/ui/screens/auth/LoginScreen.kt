@@ -52,7 +52,7 @@ fun LoginScreen(
         user?.let {
             Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
             if (it.role == "admin") {
-                navController.navigate(ROUT_ADMIN) {
+                navController.navigate(ROUT_HOME) {
                     popUpTo(0)
                 }
             } else {

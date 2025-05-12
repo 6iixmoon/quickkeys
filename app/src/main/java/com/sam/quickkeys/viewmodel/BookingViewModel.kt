@@ -3,8 +3,6 @@ package com.sam.quickkeys.viewmodel
 import android.app.Application
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sam.quickkeys.data.AppDatabase
@@ -15,7 +13,7 @@ import kotlinx.coroutines.launch
 
 open class BookingViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: BookingRepository
-    private var _bookings = mutableStateOf<List<Booking>>(emptyList())
+    private val _bookings = mutableStateOf<List<Booking>>(emptyList())
     val bookings: State<List<Booking>> get() = _bookings
 
     init {
@@ -27,7 +25,10 @@ open class BookingViewModel(application: Application) : AndroidViewModel(applica
         _bookings.value = repository.getBookingsByUser(userId)
     }
 
-    // Change return type to Job if you're launching a coroutine
+    fun fetchAllBookings() = viewModelScope.launch {
+        _bookings.value = repository.getAllBookings()
+    }
+
     open fun bookCar(booking: Booking): Job {
         return viewModelScope.launch {
             repository.insertBooking(booking)

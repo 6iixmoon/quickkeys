@@ -77,4 +77,5 @@ dependencies {
     implementation("com.jakewharton.threetenabp:threetenabp:1.4.4")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.material:material-icons-extended:<compose_version>")
 }

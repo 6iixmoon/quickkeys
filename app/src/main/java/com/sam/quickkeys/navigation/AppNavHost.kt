@@ -1,6 +1,7 @@
 package com.sam.quickkeys.navigation
 
 import android.app.Application
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,19 +25,20 @@ import com.sam.quickkeys.viewmodel.AuthViewModelFactory
 import com.sam.quickkeys.viewmodel.CarViewModel
 import com.sam.quickkeys.viewmodel.CarViewModelFactory
 import com.sam.quickkeys.viewmodel.BookingViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import com.sam.pay.ui.screens.about.AboutScreen
+import com.sam.quickkeys.ui.screens.booking.BookingScreenWithFactory
 import com.sam.quickkeys.ui.screens.home.HomeScreenContent
-import com.sam.quickkeys.model.Car
-import com.sam.quickkeys.model.User
 import com.sam.quickkeys.ui.screens.home.CarDetailsScreen
-import com.sam.quickkeys.ui.screens.scaffold.ScaffoldScreen
+import com.sam.quickkeys.ui.screens.splash.SplashScreen
 
 @Composable
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = ROUT_SCAFFOLD
+    startDestination: String = ROUT_SPLASH
 ) {
     val context = LocalContext.current
 
@@ -47,11 +49,14 @@ fun AppNavHost(
         )
     )
 
-    val carViewModel: CarViewModel = viewModel(
-        factory = CarViewModelFactory(
-            CarRepository(AppDatabase.getDatabase(context).carDao())
-        )
-    )
+    // Get CarRepository instance
+    val carRepository = CarRepository(AppDatabase.getDatabase(context).carDao())
+
+    // Fetch all users when the app starts
+    authViewModel.fetchAllUsers()
+
+    // Observe the list of users using collectAsState for StateFlow
+    val users = authViewModel.allUsers.collectAsState(initial = emptyList()).value
 
     // Define NavHost with all app destinations
     NavHost(
@@ -61,8 +66,27 @@ fun AppNavHost(
     ) {
         // Home screen showing a list of cars
         composable(ROUT_HOME) {
-            HomeScreenContent(navController, carViewModel)
+            val currentUser by authViewModel.currentUser.collectAsState()
+
+            // Pass carViewModel to the HomeScreenContent
+            HomeScreenContent(
+                navController = navController,
+                carViewModel = viewModel(factory = CarViewModelFactory(carRepository)), // Pass ViewModel here
+                isAdmin = currentUser?.role == "admin" // ✅ Set this correctly based on user role
+            )
         }
+
+        // Admin screen to manage cars (CRUD operations)
+        composable("admin") {
+            val bookingViewModel: BookingViewModel = viewModel()
+            AdminScreen(
+                carRepository = carRepository,
+                navController = navController,
+                carViewModel = viewModel(factory = CarViewModelFactory(carRepository)),
+                bookingViewModel = bookingViewModel
+            )
+        }
+
 
         // Register screen for user registration
         composable(ROUT_REGISTER) {
@@ -82,54 +106,44 @@ fun AppNavHost(
             }
         }
 
-        // Admin screen to manage cars (CRUD operations)
-        composable(ROUT_ADMIN) {
-            AdminScreen(carViewModel = carViewModel)
-        }
-
-        // Profile screen displaying user details by userId
-        composable(
-            "profile/{userId}",
-            arguments = listOf(navArgument("userId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
-            val user = User(id = userId, username = "John Doe", email = "johndoe@example.com", password = "password123", role = "Admin")
-
-            ProfileScreen(navController = navController, user = user)
+        // Profile screen displaying current logged-in user details
+        composable("profile") {
+            ProfileScreen(navController = navController, authViewModel = authViewModel)
         }
 
         // Booking screen for reserving a car
-        composable(
-            route = "booking/{carId}/{userId}",
-            arguments = listOf(
-                navArgument("carId") { type = NavType.IntType },
-                navArgument("userId") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val carId = backStackEntry.arguments?.getInt("carId") ?: 0
-            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+        composable("booking/{carId}") { backStackEntry ->
+            val carId = backStackEntry.arguments?.getString("carId")?.toIntOrNull()
 
-            val carLiveData = carViewModel.getCarById(carId)
-            val car = carLiveData.observeAsState().value
+            if (carId != null) {
+                val carDao = AppDatabase.getDatabase(context).carDao()
+                val carRepository = CarRepository(carDao)
 
-            car?.let {
-                BookingScreen(
-                    car = it,
-                    userId = userId,
-                    bookingViewModel = BookingViewModel(context.applicationContext as Application),
-                    navController = navController
+                val carViewModel: CarViewModel = viewModel(
+                    factory = CarViewModelFactory(carRepository)
                 )
+
+                val car by carViewModel.getCarById(carId).observeAsState()
+
+                car?.let {
+                    BookingScreenWithFactory(
+                        car = it,
+                        userId = 123, // Or pass actual userId
+                        navController = navController
+                    )
+                } ?: CircularProgressIndicator()
             }
         }
+
 
         // About screen with app information
         composable(ROUT_ABOUT) {
             AboutScreen(navController)
         }
 
-        // Scaffold screen managing the app layout (BottomBar, FAB, etc.)
-        composable(ROUT_SCAFFOLD) {
-            ScaffoldScreen(navController = navController)
+        // Splash screen displayed at the start
+        composable(ROUT_SPLASH) {
+            SplashScreen(navController)
         }
 
         // Car details screen showing full car info
@@ -138,6 +152,9 @@ fun AppNavHost(
             arguments = listOf(navArgument("carId") { type = NavType.IntType })
         ) { backStackEntry ->
             val carId = backStackEntry.arguments?.getInt("carId") ?: 0
+            val carViewModel: CarViewModel = viewModel(
+                factory = CarViewModelFactory(carRepository)
+            )
             val carLiveData = carViewModel.getCarById(carId)
             val car = carLiveData.observeAsState().value
 
@@ -145,9 +162,5 @@ fun AppNavHost(
                 CarDetailsScreen(carId = carId, navController = navController)
             }
         }
-
-
-
     }
 }
-

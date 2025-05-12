@@ -13,6 +13,9 @@ class AuthViewModel(private val repository: UserRepository) : ViewModel() {
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser
 
+    private val _allUsers = MutableStateFlow<List<User>>(emptyList())
+    val allUsers: StateFlow<List<User>> = _allUsers
+
     fun registerUser(user: User) {
         viewModelScope.launch {
             repository.registerUser(user)
@@ -28,5 +31,12 @@ class AuthViewModel(private val repository: UserRepository) : ViewModel() {
 
     fun logoutUser() {
         _currentUser.value = null
+    }
+
+    fun fetchAllUsers() {
+        viewModelScope.launch {
+            val users = repository.getAllUsers() // Make sure your repository has this method
+            _allUsers.value = users
+        }
     }
 }

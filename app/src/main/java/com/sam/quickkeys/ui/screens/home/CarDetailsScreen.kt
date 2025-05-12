@@ -102,7 +102,7 @@ fun CarDetailsScreen(carId: Int, navController: NavHostController) {
 
                     Button(
                         onClick = {
-                            navController.navigate("admin_with_car/${it.id}")
+                            navController.navigate("booking/${it.id}")
                         },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = it.isAvailable,

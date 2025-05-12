@@ -32,6 +32,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.sam.quickkeys.navigation.ROUT_ADMIN
 import com.sam.quickkeys.navigation.ROUT_BOOKING
+import com.sam.quickkeys.navigation.ROUT_PROFILE
 import com.sam.quickkeys.navigation.getCarRoute
 
 private val BlackWhiteColorScheme = darkColorScheme(
@@ -42,10 +43,13 @@ private val BlackWhiteColorScheme = darkColorScheme(
     surface = Color.White,
     onSurface = Color.Black
 )
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
     navController: NavHostController,
-    carViewModel: CarViewModel = viewModel()
+    carViewModel: CarViewModel = viewModel(),
+    isAdmin: Boolean = false
 ) {
     val carList by carViewModel.allCars.observeAsState(emptyList())
     var searchQuery by remember { mutableStateOf("") }
@@ -56,61 +60,112 @@ fun HomeScreenContent(
                 (searchQuery.isBlank() || "${it.name} ${it.model}".contains(searchQuery, ignoreCase = true))
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            label = { Text("Search cars...") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
-        )
-
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-        ) {
-            listOf("All", "Electric", "SUV", "Sports").forEach { type ->
-                FilterChip(
-                    selected = selectedType == type,
-                    onClick = { selectedType = type },
-                    label = { Text(type) },
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
-            }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("QuickKeys", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(navController = navController, isAdmin = isAdmin)
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Available Cars",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(bottom = 72.dp)
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
         ) {
-            items(filteredCars) { car ->
-                CarCardModern(car = car) {
-                    navController.navigate(getCarRoute(car.id))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = { Text("Search cars...") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                listOf("All", "Electric", "SUV", "Sports").forEach { type ->
+                    FilterChip(
+                        selected = selectedType == type,
+                        onClick = { selectedType = type },
+                        label = { Text(type) },
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Available Cars",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                items(filteredCars) { car ->
+                    CarCardModern(car = car) {
+                        navController.navigate(getCarRoute(car.id))
+                    }
                 }
             }
         }
     }
 }
+
+
+@Composable
+fun BottomNavigationBar(navController: NavHostController, isAdmin: Boolean) {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 8.dp
+    ) {
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+            label = { Text("Home") },
+            selected = false,
+            onClick = { /* Already on home, or navigate to home route */ }
+        )
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+            label = { Text("Profile") },
+            selected = false,
+            onClick = { navController.navigate("profile") }
+        )
+
+        if (isAdmin) {
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Settings, contentDescription = "Admin") },
+                label = { Text("Admin") },
+                selected = false,
+                onClick = { navController.navigate(ROUT_ADMIN) }
+            )
+        }
+    }
+}
+
+
 
 
 @Composable

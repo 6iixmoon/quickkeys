@@ -13,4 +13,7 @@ interface BookingDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBooking(booking: Booking)
+
+    @Query("SELECT * FROM bookings")
+    suspend fun getAllBookings(): List<Booking>
 }
